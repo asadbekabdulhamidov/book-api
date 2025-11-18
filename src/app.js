@@ -81,5 +81,31 @@ app.post('/api/books', (req, res) => {
   });
 });
 
+// put
+app.put('/api/books/:id', (req, res) => {
+  let bookId = Number(req.params.id);
+  let { title, author } = req.body;
+  const putBook = books.find((item) => item.id === bookId);
+
+  if (!putBook)
+    return res.status(404).json({
+      success: false,
+      message: `Bu ${bookId} bo'yicha kitob topilmadi shunga ozgartirib bolmaydi`,
+    });
+
+  if (title && title.trim()) {
+    putBook.title = title.trim();
+  }
+
+  if (author && author.trim()) {
+    putBook.author = author.trim();
+  }
+
+  res.json({
+    success: true,
+    data: putBook,
+  });
+});
+
 // 3) app'ni tashqariga export qilamiz
 module.exports = app;
