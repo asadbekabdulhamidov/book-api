@@ -107,5 +107,28 @@ app.put('/api/books/:id', (req, res) => {
   });
 });
 
+// delete
+app.delete('/api/books/:id', (req, res) => {
+  let bookId = Number(req.params.id);
+
+  const indexDelete = books.findIndex((item) => item.id === bookId);
+  if (indexDelete === -1)
+    return res.status(404).json({
+      message: 'Book topilmadi',
+      success: false,
+      status: 404,
+    });
+  // ochirishdan oldin saqlab olamz
+  let deleteBook = books[indexDelete];
+  // booksdan bitta bookni ochirish
+  books.splice(indexDelete, 1);
+
+  res.json({
+    succes: true,
+    message: 'Muvaffaqiyali ochirildi',
+    deleteBook,
+  });
+});
+
 // 3) app'ni tashqariga export qilamiz
 module.exports = app;
