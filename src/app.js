@@ -8,6 +8,10 @@ const app = express();
 // middleware
 
 app.use(express.json()); //req.body dagi Json malumotlarini avtomatik parse qiladi
+app.use((req, res, next) => {
+  console.log(`Custom log => ${req.method} ${req.originalUrl}`);
+  next();
+});
 app.use(cors()); // boshqa domen/ portlaridan kelgan sorovlarga ruhsat beradi masalan bu bolmasa forntend sorov yubora olmaydi.
 app.use(helmet()); // xavfsizlik uchun HTTP headerlarni sozlaydi
 app.use(morgan('dev')); // har bir requestni konsolga log qilib boradi
@@ -19,6 +23,11 @@ let books = [
 ];
 
 //test api
+app.get('/test', (req, res) => {
+  const user = undefined;
+  console.log(user.name); // ❗ xato
+  res.send('ok');
+});
 
 app.get('/', (req, res) => {
   res.json({
@@ -127,6 +136,14 @@ app.delete('/api/books/:id', (req, res) => {
     succes: true,
     message: 'Muvaffaqiyali ochirildi',
     deleteBook,
+  });
+});
+
+app.use((err, req, res, next) => {
+  console.log('Error:', err.message);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'serverda hatolik',
   });
 });
 
