@@ -139,6 +139,15 @@ app.delete('/api/books/:id', (req, res) => {
   });
 });
 
+// not found
+app.use((req, res) => {
+  res.json({
+    success: false,
+    message: `bunday manzil yoq ${req.originalUrl}`,
+  });
+});
+
+// error handler
 app.use((err, req, res, next) => {
   console.log('Error:', err.message);
   res.status(err.status || 500).json({
