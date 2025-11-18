@@ -3,6 +3,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 
+const AppError = require('./utils/appError');
+
 const app = express();
 
 // middleware
@@ -22,13 +24,6 @@ let books = [
   { id: 2, title: 'Clean Code', author: 'Robert Martin' },
 ];
 
-//test api
-app.get('/test', (req, res) => {
-  const user = undefined;
-  console.log(user.name); // ❗ xato
-  res.send('ok');
-});
-
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
@@ -47,32 +42,26 @@ app.get('/api/books', (req, res) => {
 
 // id boyicha bitta kitobni olish
 
-app.get('/api/books/:id', (req, res) => {
+app.get('/api/books/:id', (req, res, next) => {
   let bookId = Number(req.params.id);
 
   let book = books.find((b) => b.id === bookId);
 
   if (book) {
     res.json({
-      book: book,
+      data: book,
       success: true,
     });
   } else {
-    res.status(404).json({
-      success: false,
-      message: 'Bunday kitob topilmadi',
-    });
+    return next(new AppError('Bunday kitob topilmadi', 404));
   }
 });
 
 // post  books yani yangi kitob qoshadi
-app.post('/api/books', (req, res) => {
+app.post('/api/books', (req, res, next) => {
   const { title, author } = req.body;
   if (!title || !title.trim() || !author || !author.trim()) {
-    res.status(400).json({
-      success: false,
-      message: 'Title va author majburiy',
-    });
+    return next(new AppError('title majburiy', 400));
   }
 
   let newBook = {
@@ -91,16 +80,12 @@ app.post('/api/books', (req, res) => {
 });
 
 // put
-app.put('/api/books/:id', (req, res) => {
+app.put('/api/books/:id', (req, res, next) => {
   let bookId = Number(req.params.id);
   let { title, author } = req.body;
   const putBook = books.find((item) => item.id === bookId);
 
-  if (!putBook)
-    return res.status(404).json({
-      success: false,
-      message: `Bu ${bookId} bo'yicha kitob topilmadi shunga ozgartirib bolmaydi`,
-    });
+  if (!putBook) return next(new AppError('Kitob topilmadi', 404));
 
   if (title && title.trim()) {
     putBook.title = title.trim();
@@ -117,31 +102,26 @@ app.put('/api/books/:id', (req, res) => {
 });
 
 // delete
-app.delete('/api/books/:id', (req, res) => {
+app.delete('/api/books/:id', (req, res, next) => {
   let bookId = Number(req.params.id);
 
   const indexDelete = books.findIndex((item) => item.id === bookId);
-  if (indexDelete === -1)
-    return res.status(404).json({
-      message: 'Book topilmadi',
-      success: false,
-      status: 404,
-    });
+  if (indexDelete === -1) return next(new AppError('Kitob topilmadi', 404));
   // ochirishdan oldin saqlab olamz
   let deleteBook = books[indexDelete];
   // booksdan bitta bookni ochirish
   books.splice(indexDelete, 1);
 
   res.json({
-    succes: true,
+    success: true,
     message: 'Muvaffaqiyali ochirildi',
-    deleteBook,
+    data: deleteBook,
   });
 });
 
 // not found
 app.use((req, res) => {
-  res.json({
+  res.json.status(404)({
     success: false,
     message: `bunday manzil yoq ${req.originalUrl}`,
   });
@@ -150,7 +130,8 @@ app.use((req, res) => {
 // error handler
 app.use((err, req, res, next) => {
   console.log('Error:', err.message);
-  res.status(err.status || 500).json({
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({
     success: false,
     message: err.message || 'serverda hatolik',
   });
