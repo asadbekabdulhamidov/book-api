@@ -56,5 +56,30 @@ app.get('/api/books/:id', (req, res) => {
   }
 });
 
+// post  books yani yangi kitob qoshadi
+app.post('/api/books', (req, res) => {
+  const { title, author } = req.body;
+  if (!title || !title.trim() || !author || !author.trim()) {
+    res.status(400).json({
+      success: false,
+      message: 'Title va author majburiy',
+    });
+  }
+
+  let newBook = {
+    id: books.length ? books[books.length - 1].id + 1 : 1,
+    title,
+    author,
+  };
+
+  books.push(newBook);
+
+  res.status(201).json({
+    success: true,
+    message: 'Muvaffaqiyatli qoshildi',
+    data: newBook,
+  });
+});
+
 // 3) app'ni tashqariga export qilamiz
 module.exports = app;
